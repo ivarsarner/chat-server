@@ -7,46 +7,68 @@ const app = express();
 const server = http.createServer(app);
 const io = socket(server);
 
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 8080;
 
-const connectedUsers = [
-  {id: uuidv4(), userName: 'Ivar'},
-  {id: uuidv4(), userName: 'Kat'},
-  {id: uuidv4(), userName: 'Seuss'},
-];
+interface User {
+  id: string;
+  userName: string;
+  timeConnected: number;
+}
 
-const isUserNameTaken = (newUserName:string) => connectedUsers.some((user) => user.userName === newUserName)
-/* 
+interface Message {
+  author: string;
+  message: string;
+  id: string;
+  timestamp: number;
+}
+
+const connectedUsers: User[] = [];
+
+const isUserNameTaken = (newUserName: string) =>
+  connectedUsers.some((user) => user.userName.toLowerCase() === newUserName.toLowerCase());
+
+const getUser = (id: string) => connectedUsers.find((user) => user.id === id);
+
 io.use((socket, next) => {
-  console.log(socket.request.query)
-}) */
+  const { userName } = socket.handshake.query;
+  const timeConnected = socket.handshake.issued;
 
-io.on('connection', (socket) => {
-  const { userName } = socket.handshake.query; 
+  const { id } = socket;
 
-  if(userName) {
-    console.log(userName);
-    console.log(isUserNameTaken(userName));
-
-    if (!isUserNameTaken(userName)) {
-      const newUser = { id: uuidv4(), userName }
-      connectedUsers.push(newUser)
-      console.log(connectedUsers)
-    }
-
+  if (isUserNameTaken(userName)) {
+    return next(new Error('User name taken'));
   }
 
-  // console.log(isUserNameTaken(socket))
+  const newUser = {
+    id,
+    userName,
+    timeConnected,
+  };
+  connectedUsers.push(newUser);
 
+  next();
+});
+
+io.on('connection', (socket) => {
   console.log('a user connected', socket.id);
-  socket.on('MESSAGE', (data) => {
-    const message = {
-      author: 'böb',
-      message: data,
-      timestamp: 1,
-      id: uuidv4()
-    }
-    io.emit('MESSAGE', message);
+
+  const user = getUser(socket.id);
+
+  socket.on('message', (message) => {
+    const author = user?.userName;
+    const timestamp = Date.now();
+    console.log(timestamp);
+    const newMessage = {
+      author,
+      message,
+      timestamp,
+      id: uuidv4(),
+    };
+    io.emit('message', newMessage);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('someone disconnected');
   });
 });
 
