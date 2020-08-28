@@ -3,63 +3,50 @@ import http from 'http';
 import socket from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 
+import { User, Timer, Fn, Socket } from './types/types';
+
+import { isUserNameTaken, addNewUser, connectedUsers, removeUser } from './lib';
+import { startTimer, removeTimer, restartTimer } from './timer';
+
 const app = express();
 const server = http.createServer(app);
 const io = socket(server);
 
 const port = process.env.PORT || 8080;
 
-interface User {
-  id: string;
-  userName: string;
-  timeConnected: number;
-}
-
-interface Message {
-  author: string;
-  message: string;
-  id: string;
-  timestamp: number;
-}
-
-const connectedUsers: User[] = [];
-
-const isUserNameTaken = (newUserName: string) =>
-  connectedUsers.some((user) => user.userName.toLowerCase() === newUserName.toLowerCase());
-
-const getUser = (id: string) => connectedUsers.find((user) => user.id === id);
+let id: string;
+let userName: string;
 
 io.use((socket, next) => {
-  const { userName } = socket.handshake.query;
-  const timeConnected = socket.handshake.issued;
-
-  const { id } = socket;
+  id = socket.id;
+  userName = socket.handshake.query.userName;
 
   if (isUserNameTaken(userName)) {
     return next(new Error('User name taken'));
   }
 
-  const newUser = {
-    id,
-    userName,
-    timeConnected,
-  };
-  connectedUsers.push(newUser);
-
+  const newUser = { id, userName };
+  addNewUser(newUser);
   next();
 });
 
 io.on('connection', (socket) => {
   console.log('a user connected', socket.id);
 
-  const user = getUser(socket.id);
+  const socketDisconnect = () => socket.disconnect(true);
+  const socketBroadcast = (message: string) => socket.broadcast.emit('broadcast', message);
+
+  let inactivityTimer: Timer;
+  const startInactivityTimer = () => startTimer(inactivityTimer, socketDisconnect, 10000);
+  const removeInactivityTimer = () => removeTimer(inactivityTimer);
+  const restartInactivityTimer = () => restartTimer(inactivityTimer, socketDisconnect, 10000);
+
+  //startInactivityTimer();
 
   socket.on('message', (message) => {
-    const author = user?.userName;
     const timestamp = Date.now();
-    console.log(timestamp);
     const newMessage = {
-      author,
+      userName,
       message,
       timestamp,
       id: uuidv4(),
@@ -67,8 +54,23 @@ io.on('connection', (socket) => {
     io.emit('message', newMessage);
   });
 
+  socket.on('typing', () => {
+    socketBroadcast(`${userName} is typing...`);
+  });
+
+  socket.on('get_users', () => {
+    socket.emit('get_users', connectedUsers);
+  });
+
+  socket.on('manual_disconnect', () => {
+    socketDisconnect();
+  });
+
   socket.on('disconnect', () => {
-    console.log('someone disconnected');
+    removeInactivityTimer();
+    removeUser(id);
+    socketBroadcast(`${userName} disconnected`);
+    console.log(`${userName} disconnected`);
   });
 });
 
