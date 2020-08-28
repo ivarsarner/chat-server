@@ -1,4 +1,4 @@
-import { Timer, Fn } from './types';
+import { Timer, Fn } from '../../types';
 
 export const startTimer = (timer: Timer, callback: Fn, ms: number) => {
   timer = setTimeout(callback, ms);

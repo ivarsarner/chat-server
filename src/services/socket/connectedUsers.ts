@@ -1,4 +1,4 @@
-import { User, Timer, Fn, Socket } from '../types';
+import { User, Timer, Fn, Socket } from '../../types';
 
 export let connectedUsers: User[] = [];
 

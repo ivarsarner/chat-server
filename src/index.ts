@@ -3,10 +3,19 @@ import http from 'http';
 import socket from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 
-import { User, Timer, Fn, Socket } from './types/types';
+import { validateUserName } from './middlewares/socket';
 
-import { isUserNameTaken, addNewUser, connectedUsers, removeUser } from './lib';
-import { startTimer, removeTimer, restartTimer } from './timer';
+import {
+  isUserNameTaken,
+  addNewUser,
+  connectedUsers,
+  removeUser,
+  socketBroadcast,
+  socketDisconnect,
+  startInactivityTimer,
+  removeInactivityTimer,
+  restartInactivityTimer,
+} from './services/socket';
 
 const app = express();
 const server = http.createServer(app);
@@ -17,29 +26,16 @@ const port = process.env.PORT || 8080;
 let id: string;
 let userName: string;
 
-io.use((socket, next) => {
-  id = socket.id;
-  userName = socket.handshake.query.userName;
-
-  if (isUserNameTaken(userName)) {
-    return next(new Error('User name taken'));
-  }
-
-  const newUser = { id, userName };
-  addNewUser(newUser);
-  next();
-});
+io.use(validateUserName);
 
 io.on('connection', (socket) => {
   console.log('a user connected', socket.id);
 
-  const socketDisconnect = () => socket.disconnect(true);
-  const socketBroadcast = (message: string) => socket.broadcast.emit('broadcast', message);
+  id = socket.id;
+  userName = socket.handshake.query.userName;
 
-  let inactivityTimer: Timer;
-  const startInactivityTimer = () => startTimer(inactivityTimer, socketDisconnect, 10000);
-  const removeInactivityTimer = () => removeTimer(inactivityTimer);
-  const restartInactivityTimer = () => restartTimer(inactivityTimer, socketDisconnect, 10000);
+  const newUser = { id, userName };
+  addNewUser(newUser);
 
   //startInactivityTimer();
 
@@ -55,7 +51,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('typing', () => {
-    socketBroadcast(`${userName} is typing...`);
+    const message = `${userName} is typing...`;
+    socketBroadcast(socket, message);
   });
 
   socket.on('get_users', () => {
@@ -63,13 +60,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('manual_disconnect', () => {
-    socketDisconnect();
+    socketDisconnect(socket);
   });
 
   socket.on('disconnect', () => {
     removeInactivityTimer();
     removeUser(id);
-    socketBroadcast(`${userName} disconnected`);
+    const message = `${userName} disconnected`;
+    socketBroadcast(socket, message);
     console.log(`${userName} disconnected`);
   });
 });
