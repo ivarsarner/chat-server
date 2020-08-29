@@ -26,8 +26,7 @@ export const initSocketIoServer = (server: HttpServer): void => {
     const id = socket.id;
     const userName = socket.handshake.query.userName;
 
-    const newUser = { id, userName };
-    addNewUser(newUser);
+    addNewUser({ id, userName });
 
     //startInactivityTimer();
 

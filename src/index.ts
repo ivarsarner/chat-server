@@ -9,7 +9,7 @@ const server = http.createServer(app);
 const port = process.env.PORT || 8080;
 
 server.listen(port, () => {
-  console.log(`Socket IO server listening on ${port}`);
+  console.log(`Server listening on ${port}`);
 });
 
 initSocketIoServer(server);
