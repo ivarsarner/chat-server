@@ -1,5 +1,8 @@
 import { Socket } from '../../types';
 
-export const socketDisconnect = (socket: Socket) => socket.disconnect(true);
-export const socketBroadcast = (socket: Socket, message: string) =>
-  socket.broadcast.emit('broadcast', message);
+export const socketDisconnect = (socket: Socket): void => {
+  socket.disconnect(true);
+};
+export const socketBroadcast = (socket: Socket, type: string, message: string): void => {
+  socket.broadcast.emit(type, message);
+};
