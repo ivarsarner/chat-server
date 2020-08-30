@@ -1,18 +1,20 @@
 import socket from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
 import { validateUserName } from './middlewares/socket';
 
 import { HttpServer } from './types';
 
 import {
-  addNewUser,
-  connectedUsers,
+  storeUser,
   removeUser,
   socketBroadcast,
   socketDisconnect,
   startInactivityTimer,
   removeInactivityTimer,
   restartInactivityTimer,
+  newMessage,
+  getAllUsers,
+  storeTypingUser,
+  typingUsers,
 } from './services/socket';
 
 export const initSocketIoServer = (server: HttpServer): void => {
@@ -21,44 +23,32 @@ export const initSocketIoServer = (server: HttpServer): void => {
   io.use(validateUserName);
 
   io.on('connection', (socket) => {
-    console.log('a user connected', socket.id);
-
     const id = socket.id;
     const userName = socket.handshake.query.userName;
 
-    addNewUser({ id, userName });
+    console.log('a user connected: ', userName, id);
+    storeUser({ id, userName });
+
+    socket.broadcast.emit('message', newMessage(`${userName} has connected`, 'ServerBot'));
+    socket.emit('connected_users', getAllUsers());
 
     //startInactivityTimer();
 
     socket.on('message', (message) => {
-      const timestamp = Date.now();
-      const newMessage = {
-        userName,
-        message,
-        timestamp,
-        id: uuidv4(),
-      };
-      io.emit('message', newMessage);
+      io.emit('message', newMessage(message, userName));
     });
 
     socket.on('typing', () => {
-      const message = `${userName} is typing...`;
-      socketBroadcast(socket, 'typing', message);
-    });
-
-    socket.on('get_users', () => {
-      socket.emit('get_users', connectedUsers);
-    });
-
-    socket.on('manual_disconnect', () => {
-      socketDisconnect(socket);
+      storeTypingUser({ id, userName });
+      socket.broadcast.emit('typing', typingUsers);
     });
 
     socket.on('disconnect', () => {
       removeInactivityTimer();
       removeUser(id);
-      const message = `${userName} disconnected`;
-      socketBroadcast(socket, 'user_disconnected', message);
+      socket.emit('connected_users', getAllUsers());
+      socket.broadcast.emit('message', newMessage(`${userName} has diconnected`, 'ServerBot'));
+
       console.log(`${userName} disconnected`);
     });
   });

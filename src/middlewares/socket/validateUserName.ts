@@ -5,7 +5,7 @@ export const validateUserName = (socket: Socket, next: Next) => {
   const userName = socket.handshake.query.userName;
 
   if (isUserNameTaken(userName)) {
-    return next(new Error('User name taken'));
+    return next(new Error('userName_taken'));
   }
 
   next();
