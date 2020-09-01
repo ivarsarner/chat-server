@@ -30,8 +30,8 @@ export const initSocketIoServer = (server: HttpServer): void => {
   io.use(validateUserName);
 
   io.on('connection', (socket) => {
-    const id = socket.id;
-    const userName = socket.handshake.query.userName;
+    const { id } = socket;
+    const { userName } = socket.handshake.query;
 
     let inactivityTimer: NodeJS.Timeout;
 
@@ -82,7 +82,7 @@ export const initSocketIoServer = (server: HttpServer): void => {
         logger.info(`user kicked due to inactivity: ${userName} ${id}`);
         socket.broadcast.emit(
           'message',
-          newMessage(`${userName} got kicked due to inactivity`, 'SERVER')
+          newMessage(`${userName} got kicked due to inactivity`, 'SERVER'),
         );
       }
       clearTimeout(inactivityTimer);

@@ -2,8 +2,8 @@ import { isUserNameTaken } from '../../services/socket';
 import { logger } from '../../logger';
 import { Socket, Next } from '../../types';
 
-export const validateUserName = (socket: Socket, next: Next) => {
-  const userName: string = socket.handshake.query.userName;
+export const validateUserName = (socket: Socket, next: Next): void => {
+  const { userName } = socket.handshake.query;
   const regex = /\b\w{3,12}\b/i;
 
   if (!regex.test(userName)) {

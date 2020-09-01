@@ -6,9 +6,7 @@ const logConfiguration = {
       filename: './logs/socketIo.log',
       format: format.combine(
         format.timestamp(),
-        format.printf((info) => {
-          return `${info.timestamp} - [${info.level}]: ${info.message}`;
-        })
+        format.printf((info) => `${info.timestamp} - [${info.level}]: ${info.message}`),
       ),
     }),
   ],

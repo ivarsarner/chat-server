@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Server } from 'http';
 
 export type HttpServer = Server;
@@ -14,7 +15,7 @@ export interface User {
 }
 
 export interface Message {
-  author: string;
+  userName: string;
   message: string;
   id: string;
   timestamp: number;
