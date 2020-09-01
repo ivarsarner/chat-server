@@ -92,6 +92,7 @@ export const initSocketIoServer = (server: HttpServer): void => {
       }
       clearTimeout(inactivityTimer);
       removeUser(id);
+      removeTypingUser(id);
       io.emit('connected_users', getAllUsers());
       console.log(`${userName} disconnected`);
     });
