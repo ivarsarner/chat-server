@@ -10,6 +10,7 @@ This is a web chat application which is divided in 2 parts:
 - React
 - Redux
 - Websockets (Socket.io)
+- Winston (logger)
 - Typescript
 
 ## Run locally

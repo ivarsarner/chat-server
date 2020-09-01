@@ -2,9 +2,7 @@ import socket from 'socket.io';
 import { validateUserName } from './middlewares/socket';
 
 import { logger } from './logger';
-
-import { HttpServer, Timer } from './types';
-
+import { HttpServer } from './types';
 import {
   storeUser,
   removeUser,
@@ -12,9 +10,6 @@ import {
   getAllUsers,
   storeTypingUser,
   typingUsers,
-  startInactivityTimer,
-  removeInactivityTimer,
-  restartInactivityTimer,
   removeTypingUser,
 } from './services/socket';
 
