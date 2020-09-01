@@ -1,5 +1,6 @@
 import express from 'express';
 import http from 'http';
+import cors from 'cors';
 
 import { initSocketIoServer } from './socket';
 
@@ -7,6 +8,8 @@ const app = express();
 const server = http.createServer(app);
 
 const port = process.env.PORT || 8080;
+
+app.use(cors());
 
 app.get('/', (req, res) => {
   res.send('Socket IO server is online');
