@@ -10,8 +10,7 @@
     "start": "node build/index.js",
     "lint": "eslint --ext .ts .",
     "test": "jest",
-    "testWatch": "jest --watch --verbose",
-    "tsc": "tsc"
+    "testWatch": "jest --watch --verbose"
   },
   "keywords": [],
   "author": "Ivar Särner",
