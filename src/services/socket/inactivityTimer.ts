@@ -1,11 +1,28 @@
 import { startTimer, removeTimer, restartTimer } from '../../utils/timer';
-import { socketDisconnect } from './socketEvents';
-import { Timer } from '../../types';
-
-const timeMs = 30000;
+import { Timer, Socket } from '../../types';
 
 let inactivityTimer: Timer;
 
-export const startInactivityTimer = () => startTimer(inactivityTimer, socketDisconnect, timeMs);
-export const removeInactivityTimer = () => removeTimer(inactivityTimer);
-export const restartInactivityTimer = () => restartTimer(inactivityTimer, socketDisconnect, timeMs);
+export const startInactivityTimer = (socket: Socket, timeMs: number): void => {
+  startTimer(
+    inactivityTimer,
+    () => {
+      socket.disconnect(true);
+    },
+    timeMs
+  );
+};
+
+export const removeInactivityTimer = (): void => {
+  if (inactivityTimer) removeTimer(inactivityTimer);
+};
+
+export const restartInactivityTimer = (socket: Socket, timeMs: number): void => {
+  restartTimer(
+    inactivityTimer,
+    () => () => {
+      socket.disconnect(true);
+    },
+    timeMs
+  );
+};

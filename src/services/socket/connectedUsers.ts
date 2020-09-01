@@ -1,6 +1,7 @@
 import { User, Timer, Fn, Socket } from '../../types';
+import { mockUsers } from './../../mock';
 
-export let connectedUsers: User[] = [{ id: 'x', userName: 'Ivar' }];
+export let connectedUsers: User[] = mockUsers;
 export let typingUsers: User[];
 
 export const isUserNameTaken = (userName: string): boolean =>

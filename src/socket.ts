@@ -1,24 +1,30 @@
 import socket from 'socket.io';
 import { validateUserName } from './middlewares/socket';
 
-import { HttpServer } from './types';
+import { HttpServer, Timer } from './types';
 
 import {
   storeUser,
   removeUser,
-  socketBroadcast,
-  socketDisconnect,
-  startInactivityTimer,
-  removeInactivityTimer,
-  restartInactivityTimer,
   newMessage,
   getAllUsers,
   storeTypingUser,
   typingUsers,
+  startInactivityTimer,
+  removeInactivityTimer,
+  restartInactivityTimer,
 } from './services/socket';
 
-export const initSocketIoServer = (server: HttpServer): void => {
+export const initSocketIoServer = (server: HttpServer, timeMs: number): void => {
   const io = socket(server);
+
+  const terminateGracefully = () => {
+    io.emit('server_terminated');
+    io.close();
+  };
+
+  process.on('SIGINT', terminateGracefully);
+  process.on('SIGTERM', terminateGracefully);
 
   io.use(validateUserName);
 
@@ -29,10 +35,11 @@ export const initSocketIoServer = (server: HttpServer): void => {
     console.log('a user connected: ', userName, id);
     storeUser({ id, userName });
 
-    socket.broadcast.emit('message', newMessage(`${userName} has connected`, 'ServerBot'));
-    socket.emit('connected_users', getAllUsers());
+    socket.broadcast.emit('message', newMessage(`${userName} has connected`, 'SERVER'));
+    io.emit('connected_users', getAllUsers());
+    socket.emit('message', newMessage(`Welcome ${userName}`, 'SERVER'));
 
-    //startInactivityTimer();
+    startInactivityTimer(socket, timeMs);
 
     socket.on('message', (message) => {
       io.emit('message', newMessage(message, userName));
@@ -43,12 +50,19 @@ export const initSocketIoServer = (server: HttpServer): void => {
       socket.broadcast.emit('typing', typingUsers);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
+      if (reason === 'client namespace disconnect') {
+        socket.broadcast.emit('message', newMessage(`${userName} has left the chat`, 'SERVER'));
+      }
+      if (reason === 'server namespace disconnect') {
+        socket.broadcast.emit(
+          'message',
+          newMessage(`${userName} got kicked due to inactivity`, 'SERVER')
+        );
+      }
       removeInactivityTimer();
       removeUser(id);
-      socket.emit('connected_users', getAllUsers());
-      socket.broadcast.emit('message', newMessage(`${userName} has diconnected`, 'ServerBot'));
-
+      io.emit('connected_users', getAllUsers());
       console.log(`${userName} disconnected`);
     });
   });
