@@ -48,7 +48,10 @@ export const initSocketIoServer = (server: HttpServer): void => {
 
     storeUser({ id, userName });
 
-    socket.broadcast.emit('message', newMessage(`${userName} has connected`, 'SERVER'));
+    socket.broadcast.emit(
+      'message',
+      newMessage(`${userName} has connected`, 'SERVER'),
+    );
     io.emit('connected_users', getAllUsers());
     socket.emit('message', newMessage(`Welcome ${userName}`, 'SERVER'));
 
@@ -76,13 +79,16 @@ export const initSocketIoServer = (server: HttpServer): void => {
     socket.on('disconnect', (reason) => {
       if (reason === 'client namespace disconnect') {
         logger.info(`user left the chat: ${userName} ${id}`);
-        socket.broadcast.emit('message', newMessage(`${userName} has left the chat`, 'SERVER'));
+        socket.broadcast.emit(
+          'message',
+          newMessage(`${userName} has left the chat`, 'SERVER'),
+        );
       }
       if (reason === 'server namespace disconnect') {
         logger.info(`user kicked due to inactivity: ${userName} ${id}`);
         socket.broadcast.emit(
           'message',
-          newMessage(`${userName} got kicked due to inactivity`, 'SERVER')
+          newMessage(`${userName} got kicked due to inactivity`, 'SERVER'),
         );
       }
       clearTimeout(inactivityTimer);
