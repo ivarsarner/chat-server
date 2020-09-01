@@ -9,6 +9,9 @@ const socket_1 = require("./socket");
 const app = express_1.default();
 const server = http_1.default.createServer(app);
 const port = process.env.PORT || 8080;
+app.get('/', (req, res) => {
+    res.send('Socket IO server is online');
+});
 server.listen(port, () => {
     console.log(`Server listening on ${port}`);
 });
