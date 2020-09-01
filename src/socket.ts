@@ -15,9 +15,10 @@ import {
   startInactivityTimer,
   removeInactivityTimer,
   restartInactivityTimer,
+  removeTypingUser,
 } from './services/socket';
 
-export const initSocketIoServer = (server: HttpServer, timeMs: number): void => {
+export const initSocketIoServer = (server: HttpServer): void => {
   const io = socket(server);
 
   logger.info('Socket IO Server initiated');
@@ -37,6 +38,17 @@ export const initSocketIoServer = (server: HttpServer, timeMs: number): void => 
     const id = socket.id;
     const userName = socket.handshake.query.userName;
 
+    let inactivityTimer: NodeJS.Timeout;
+
+    // sets the inactivity timer to 5 minues (300000)
+    const startInactivityTimer = (timeMs = 300000): void => {
+      inactivityTimer = setTimeout(() => {
+        socket.disconnect(true);
+      }, timeMs);
+    };
+
+    startInactivityTimer();
+
     logger.info(`user CONNECTED: ${userName} ${id}`);
 
     storeUser({ id, userName });
@@ -45,16 +57,25 @@ export const initSocketIoServer = (server: HttpServer, timeMs: number): void => 
     io.emit('connected_users', getAllUsers());
     socket.emit('message', newMessage(`Welcome ${userName}`, 'SERVER'));
 
-    startInactivityTimer(socket, timeMs);
-
     socket.on('message', (message) => {
+      clearTimeout(inactivityTimer);
+      startInactivityTimer();
       logger.info(`new message - ${userName}: ${message}`);
       io.emit('message', newMessage(message, userName));
     });
 
     socket.on('typing', () => {
+      clearTimeout(inactivityTimer);
+      startInactivityTimer();
       storeTypingUser({ id, userName });
-      socket.broadcast.emit('typing', typingUsers);
+      socket.emit('typing', typingUsers);
+    });
+
+    socket.on('stopped_typing', () => {
+      removeTypingUser(id);
+      clearTimeout(inactivityTimer);
+      startInactivityTimer();
+      socket.emit('typing', typingUsers);
     });
 
     socket.on('disconnect', (reason) => {
@@ -69,7 +90,7 @@ export const initSocketIoServer = (server: HttpServer, timeMs: number): void => 
           newMessage(`${userName} got kicked due to inactivity`, 'SERVER')
         );
       }
-      removeInactivityTimer();
+      clearTimeout(inactivityTimer);
       removeUser(id);
       io.emit('connected_users', getAllUsers());
       console.log(`${userName} disconnected`);

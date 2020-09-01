@@ -4,9 +4,12 @@ import { Timer, Socket } from '../../types';
 let inactivityTimer: Timer;
 
 export const startInactivityTimer = (socket: Socket, timeMs: number): void => {
+  console.log('timer started');
   startTimer(
     inactivityTimer,
     () => {
+      console.log('timer ended');
+
       socket.disconnect(true);
     },
     timeMs
@@ -14,13 +17,15 @@ export const startInactivityTimer = (socket: Socket, timeMs: number): void => {
 };
 
 export const removeInactivityTimer = (): void => {
-  if (inactivityTimer) removeTimer(inactivityTimer);
+  removeTimer(inactivityTimer);
 };
 
 export const restartInactivityTimer = (socket: Socket, timeMs: number): void => {
+  console.log('timer RESTARTED');
   restartTimer(
     inactivityTimer,
     () => () => {
+      console.log('timer ended after restart');
       socket.disconnect(true);
     },
     timeMs

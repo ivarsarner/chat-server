@@ -2,7 +2,7 @@ import { User, Timer, Fn, Socket } from '../../types';
 import { mockUsers } from './../../mock';
 
 export let connectedUsers: User[] = mockUsers;
-export let typingUsers: User[];
+export let typingUsers: User[] = [];
 
 export const isUserNameTaken = (userName: string): boolean =>
   connectedUsers.some((user) => user.userName.toLowerCase() === userName.toLowerCase());
@@ -21,7 +21,9 @@ export const removeUser = (id: string): void => {
 };
 
 export const storeTypingUser = (user: User): void => {
-  typingUsers.push(user);
+  if (!typingUsers.find((typingUser) => typingUser.id === user.id)) {
+    typingUsers.push(user);
+  }
 };
 
 export const removeTypingUser = (id: string): void => {

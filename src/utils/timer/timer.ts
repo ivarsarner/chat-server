@@ -5,6 +5,7 @@ export const startTimer = (timer: Timer, callback: Fn, ms: number) => {
 };
 
 export const removeTimer = (timer: Timer) => {
+  console.log('timer removed');
   clearTimeout(timer);
 };
 
