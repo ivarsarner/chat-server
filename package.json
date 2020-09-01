@@ -4,13 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prestart": "npm run build",
-    "dev": "ts-node-dev --respawn src/index.ts",
-    "build": "tsc",
-    "start": "node build/index.js",
+    "tsc": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "ts-node-dev src/index.ts",
     "lint": "eslint --ext .ts .",
-    "test": "jest",
-    "testWatch": "jest --watch --verbose"
+    "start": "node build/index.js"
   },
   "keywords": [],
   "author": "Ivar Särner",
