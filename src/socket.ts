@@ -82,7 +82,7 @@ export const initSocketIoServer = (server: HttpServer): void => {
         logger.info(`user kicked due to inactivity: ${userName} ${id}`);
         socket.broadcast.emit(
           'message',
-          newMessage(`${userName} got kicked due to inactivity`, 'SERVER'),
+          newMessage(`${userName} got kicked due to inactivity`, 'SERVER')
         );
       }
       clearTimeout(inactivityTimer);
