@@ -21,7 +21,11 @@ export const initSocketIoServer = (server: HttpServer): void => {
   const terminateGracefully = (signal: string) => {
     logger.warn(`${signal} occured, terminating server`);
     io.emit('server_terminated');
-    io.close();
+    io.close(() => {
+      server.close(() => {
+        process.exit();
+      });
+    });
   };
 
   process.on('SIGINT', terminateGracefully);
