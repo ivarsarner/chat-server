@@ -4,7 +4,9 @@ export let connectedUsers: User[] = [];
 export let typingUsers: User[] = [];
 
 export const isUserNameTaken = (userName: string): boolean =>
-  connectedUsers.some((user) => user.userName.toLowerCase() === userName.toLowerCase());
+  connectedUsers.some(
+    (user) => user.userName.toLowerCase() === userName.toLowerCase(),
+  );
 
 export const getUser = (id: string): User | undefined =>
   connectedUsers.find((user) => user.id === id);
